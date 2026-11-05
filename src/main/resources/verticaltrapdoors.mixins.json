@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.radaeli.verticaltrapdoors.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BlockDefaultStateInvoker",
+    "TrapDoorBlockMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
