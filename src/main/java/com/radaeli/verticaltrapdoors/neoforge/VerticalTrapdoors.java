@@ -1,6 +1,7 @@
 package com.radaeli.verticaltrapdoors.neoforge;
 
 import com.radaeli.verticaltrapdoors.neoforge.network.ModNetworking;
+import com.radaeli.verticaltrapdoors.neoforge.block.TrapDoorRegistrySnapshot;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ public final class VerticalTrapdoors {
 
     public VerticalTrapdoors(IEventBus modEventBus) {
         modEventBus.addListener(ModNetworking::register);
+        modEventBus.addListener(TrapDoorRegistrySnapshot::collect);
         LOGGER.info("{} initialized on NeoForge", MOD_ID);
     }
 }

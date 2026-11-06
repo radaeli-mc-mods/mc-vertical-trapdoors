@@ -1,6 +1,7 @@
 package com.radaeli.verticaltrapdoors.neoforge.mixin;
 
 import com.radaeli.verticaltrapdoors.neoforge.block.TrapDoorProperties;
+import com.radaeli.verticaltrapdoors.neoforge.block.TrapDoorOrientation;
 import com.radaeli.verticaltrapdoors.neoforge.network.AltModifierState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /** Adds optional vertical, door-like placement to trapdoors. */
 @Mixin(TrapDoorBlock.class)
 public abstract class TrapDoorBlockMixin {
+    /** Kept for reference; vertical placement now encodes its swing in the block rotation. */
+    private static final boolean LEGACY_HINGE_REPOSITIONING_ENABLED = false;
+
     @Inject(method = "<init>", at = @At("TAIL"))
     private void verticalTrapdoors$setVanillaDefaults(
             BlockSetType type,
@@ -52,15 +56,9 @@ public abstract class TrapDoorBlockMixin {
         Direction clickedFace = context.getClickedFace();
 
         if (placedState != null) {
-            boolean wallPlacement = clickedFace.getAxis().isHorizontal();
             boolean shiftDown = player != null && player.isShiftKeyDown();
             boolean altDown = player != null && AltModifierState.isDown(player);
-            boolean vertical = wallPlacement && (shiftDown || altDown);
-            boolean reversed = vertical && altDown && !shiftDown;
-
-            callback.setReturnValue(placedState
-                    .setValue(TrapDoorProperties.VERTICAL, vertical)
-                    .setValue(TrapDoorProperties.REVERSED, reversed));
+            callback.setReturnValue(TrapDoorOrientation.placementState(placedState, clickedFace, shiftDown, altDown));
         }
     }
 
@@ -71,7 +69,7 @@ public abstract class TrapDoorBlockMixin {
             BlockPos pos,
             CollisionContext context,
             CallbackInfoReturnable<VoxelShape> callback) {
-        if (!state.getValue(TrapDoorProperties.VERTICAL)) {
+        if (!LEGACY_HINGE_REPOSITIONING_ENABLED || !state.getValue(TrapDoorProperties.VERTICAL)) {
             return;
         }
 
@@ -81,6 +79,30 @@ public abstract class TrapDoorBlockMixin {
         } else if (state.getValue(TrapDoorBlock.OPEN)) {
             panelFacing = panelFacing.getClockWise();
         }
+
+        callback.setReturnValue(switch (panelFacing) {
+            case NORTH -> Block.box(0, 0, 13, 16, 16, 16);
+            case SOUTH -> Block.box(0, 0, 0, 16, 16, 3);
+            case WEST -> Block.box(13, 0, 0, 16, 16, 16);
+            case EAST -> Block.box(0, 0, 0, 3, 16, 16);
+            default -> throw new IllegalStateException("Trapdoor facing must be horizontal: " + panelFacing);
+        });
+    }
+
+    @Inject(method = "getShape", at = @At("HEAD"), cancellable = true)
+    private void verticalTrapdoors$useRotatedBlockShape(
+            BlockState state,
+            BlockGetter level,
+            BlockPos pos,
+            CollisionContext context,
+            CallbackInfoReturnable<VoxelShape> callback) {
+        if (!state.getValue(TrapDoorProperties.VERTICAL)) {
+            return;
+        }
+
+        // A vertical trapdoor is the whole block rotated upright. Its open state
+        // turns around the vertical edge in the selected (already rotated) facing.
+        Direction panelFacing = TrapDoorOrientation.panelFacing(state);
 
         callback.setReturnValue(switch (panelFacing) {
             case NORTH -> Block.box(0, 0, 13, 16, 16, 16);
