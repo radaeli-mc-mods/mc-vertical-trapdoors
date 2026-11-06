@@ -1,6 +1,9 @@
 
 <p align="center" style="text-align: center;">Just Vertical Trapdoors!</p>
 
+<p align="center"><img src="https://raw.githubusercontent.com/radaeli-mc-mods/mc-vertical-trapdoors/main/docs/gallery/vertical-trapdoors-wall-closed.png" alt="Wall of trapdoors - Closed" width="268"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/radaeli-mc-mods/mc-vertical-trapdoors/main/docs/gallery/vertical-trapdoors-wall-open.png" alt="Wall of trapdoors - Open" width="268"></p>
+
 <p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaeli-mc-mods/mc-vertical-trapdoors/main/docs/gallery/section-titles/what_it_is.png" alt="WHAT IT IS?" width="267"></p>
 
 When attached to a wall, vanilla trapdoors lie flat. **Vertical Trapdoors** lets you place them upright instead, including trapdoors added by other mods. It adds no new blocks or items.
