@@ -24,10 +24,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  targets:
+    name: Read target matrix
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+      - id: read
+        shell: bash
+        run: echo "matrix=$(jq -c '.targets' .github/targets.json)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.minecraft }} / ${{ matrix.loader }}
+    needs: targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.targets.outputs.matrix) }}
     env:
       RELEASE_TAG: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,35 +57,61 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@v4
-      - name: Validate tag and build
+      - name: Build target and tests
         shell: bash
         run: |
           set -euo pipefail
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           chmod +x ./gradlew
-          ./gradlew -Pmod_version="${RELEASE_TAG#v}" build --no-daemon --no-parallel --console=plain
-      - name: Collect release JAR
+          ./gradlew -Pmod_version="${RELEASE_TAG#v}" ${{ matrix.project }}:clean ${{ matrix.project }}:build --no-daemon --no-parallel --console=plain
+      - name: Inspect production JAR
+        working-directory: .
         shell: bash
         run: |
           set -euo pipefail
-          version="${RELEASE_TAG#v}"
-          mod_id="$(sed -nE 's/^mod_id=([^[:space:]]+)$/\1/p' gradle.properties)"
-          mkdir -p release-artifacts
-          mapfile -t jars < <(find build/libs -maxdepth 1 -type f -name "*-${version}.jar" ! -name '*-sources.jar' -print)
+          mapfile -t jars < <(find "$(dirname '${{ matrix.artifact }}')" -maxdepth 1 -type f -name "$(basename '${{ matrix.artifact }}')" ! -name '*-sources.jar' ! -name '*-javadoc.jar' -print)
           test "${#jars[@]}" -eq 1
-          cp "${jars[0]}" "release-artifacts/${mod_id}-${version}-neoforge.jar"
+          python tools/check_jar.py \
+            --jar "${jars[0]}" \
+            --minecraft-version '${{ matrix.minecraft }}' \
+            --loader '${{ matrix.loader }}' \
+            --java '${{ matrix.java }}' \
+            --mod-id verticaltrapdoors \
+            --mod-version "${RELEASE_TAG#v}"
+          jar_name="$(basename "${jars[0]}")"
+          (cd "$(dirname "${jars[0]}")" && sha256sum "$jar_name" > "$jar_name.sha256")
+          mkdir -p artifact-out
+          cp "${jars[0]}" "${jars[0]}.sha256" artifact-out/
+          cp -R '${{ matrix.directory }}/neoforge/build/reports/tests/test' artifact-out/test-report
+          cp -R '${{ matrix.directory }}/neoforge/build/test-results/test' artifact-out/test-results
       - uses: actions/upload-artifact@v4
         with:
-          name: neoforge-mod-${{ env.RELEASE_TAG }}
-          path: release-artifacts/
+          name: verticaltrapdoors-${{ matrix.minecraft }}-${{ matrix.loader }}
+          path: |
+            artifact-out/
           if-no-files-found: error
-      - name: Create or update the GitHub release
+
+  publish:
+    needs: [targets, build]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          pattern: verticaltrapdoors-*
+          merge-multiple: true
+      - name: Upload release artifacts
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "NeoForge Mod $RELEASE_TAG"
-          gh release upload "$RELEASE_TAG" release-artifacts/*.jar --clobber
+          shopt -s nullglob
+          jars=(release-artifacts/*.jar release-artifacts/*.sha256)
+          test "${#jars[@]}" -gt 0
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "Vertical Trapdoors $RELEASE_TAG"
+          gh release upload "$RELEASE_TAG" "${jars[@]}" --clobber

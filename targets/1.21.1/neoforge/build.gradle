@@ -1,0 +1,26 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.144'
+}
+
+apply from: rootProject.file('../../gradle/target-conventions.gradle')
+
+neoForge {
+    version = neoforgeVersion
+
+    runs {
+        client { client(); gameDirectory = project.file('../../../runs/client') }
+        server { server(); gameDirectory = project.file('../../../runs/server'); programArgument '--nogui' }
+    }
+
+    mods { "${mod_id}" { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+    unitTest { enable(); testedMod = mods[mod_id] }
+}
+
+dependencies {
+    testImplementation sourceSets.client.output
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure { useJUnitPlatform() }
+tasks.named('jar', Jar).configure { from sourceSets.client.output }

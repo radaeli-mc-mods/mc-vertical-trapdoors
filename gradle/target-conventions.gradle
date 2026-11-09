@@ -1,0 +1,65 @@
+def identityFile = rootProject.file('../../gradle.properties')
+def identity = new Properties()
+identityFile.withInputStream { identity.load(it) }
+
+def targetProps = new Properties()
+rootProject.file('gradle.properties').withInputStream { targetProps.load(it) }
+
+ext.modId = identity.getProperty('mod_id')
+ext.modName = identity.getProperty('mod_name')
+ext.modVersion = findProperty('mod_version') ?: identity.getProperty('mod_version')
+ext.modGroupId = identity.getProperty('mod_group_id')
+ext.modLicense = identity.getProperty('mod_license')
+ext.modAuthors = identity.getProperty('mod_authors')
+ext.modDescription = identity.getProperty('mod_description')
+ext.minecraftVersion = targetProps.getProperty('minecraft_version')
+ext.javaVersion = targetProps.getProperty('java_version') as int
+ext.neoforgeVersion = targetProps.getProperty('neoforge_version')
+ext.mod_id = modId
+ext.mod_name = modName
+ext.mod_version = modVersion
+ext.mod_group_id = modGroupId
+ext.minecraft_version = minecraftVersion
+ext.java_version = javaVersion
+ext.neoforge_version = neoforgeVersion
+ext.loaderId = project.name
+
+group = modGroupId
+version = "${modVersion}+${minecraftVersion}-${loaderId}"
+base { archivesName = modId }
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    withSourcesJar()
+}
+
+sourceSets {
+    main {
+        java.srcDir(rootProject.file('src/main/java'))
+        java.srcDir(rootProject.file('../../shared/src/main/java'))
+    }
+    client {
+        java.srcDir(rootProject.file('neoforge/src/client/java'))
+        java.srcDir(rootProject.file('../../shared/src/client/java'))
+        compileClasspath += sourceSets.main.output + configurations.mainCompileClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = javaVersion
+}
+
+tasks.named('processResources').configure {
+    def expanded = [
+        version: "${modVersion}+${minecraftVersion}", mod_id: modId,
+        mod_name: modName, mod_description: modDescription, mod_authors: modAuthors,
+        mod_license: modLicense, minecraft_version: minecraftVersion,
+        neoforge_version: targetProps.getProperty('neoforge_version'),
+        neoforge_loader_version_range: targetProps.getProperty('neoforge_loader_version_range')
+    ]
+    inputs.properties(expanded)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(expanded) }
+    filesMatching('pack.mcmeta') { expand(expanded) }
+}

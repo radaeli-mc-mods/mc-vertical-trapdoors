@@ -1,0 +1,12 @@
+{
+  "targets": [
+    {
+      "minecraft": "1.21.1",
+      "loader": "neoforge",
+      "java": "21",
+      "directory": "targets/1.21.1",
+      "project": ":neoforge",
+      "artifact": "targets/1.21.1/neoforge/build/libs/verticaltrapdoors-*.jar"
+    }
+  ]
+}
