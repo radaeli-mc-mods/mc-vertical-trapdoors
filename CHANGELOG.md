@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.3] - 2026-11-10
+
+### Added
+
+- Added support for Forge and Fabric on Minecraft 1.20.1.
+- Added support for Fabric and NeoForge on Minecraft 26.2.
+- Added support for Fabric and NeoForge on Minecraft 26.3.
+
+### Fixed
+
+- Fixed rendering of trapdoors with custom model data on Forge 1.20.1.
+
 ## [0.1.2] - 2026-11-11
 
 ### Added
