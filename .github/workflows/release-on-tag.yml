@@ -98,7 +98,7 @@ jobs:
           if [[ -d '${{ matrix.directory }}/${{ matrix.loader }}/build/test-results/test' ]]; then
             cp -R '${{ matrix.directory }}/${{ matrix.loader }}/build/test-results/test' artifact-out/test-results
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: verticaltrapdoors-${{ matrix.minecraft }}-${{ matrix.loader }}
           path: |
