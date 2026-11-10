@@ -9,4 +9,9 @@ public final class SdlAltKeys {
     public static boolean isAlt(int key) {
         return key == InputConstants.KEY_LALT || key == InputConstants.KEY_RALT;
     }
+
+    public static boolean isAltDown() {
+        return InputConstants.isKeyDown(InputConstants.KEY_LALT)
+                || InputConstants.isKeyDown(InputConstants.KEY_RALT);
+    }
 }

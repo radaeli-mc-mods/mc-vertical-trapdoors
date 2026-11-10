@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.radaeli.verticaltrapdoors.fabric.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["BlockUseMixin", "ModelBakeryMixin", "ClientCommonPacketListenerAccessor"],
+  "injectors": { "defaultRequire": 1 }
+}

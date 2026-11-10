@@ -154,6 +154,23 @@
       ],
       "java": 25,
       "dependencies": []
+    },
+    {
+      "id": "fabric-26.3",
+      "task": "ci-fabric-26.3",
+      "files": [
+        "targets/26.3/fabric/build/libs/verticaltrapdoors-*-fabric.jar"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "gameVersions": [
+        "26.3"
+      ],
+      "java": 25,
+      "dependencies": [
+        "fabric-api(required)"
+      ]
     }
   ]
 }
