@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/radaeli-mc-mods/mc-ci/main/schemas/mod-pipeline.schema.json",
   "displayName": "Vertical Trapdoors",
   "java": [
+    17,
     21,
     25
   ],
@@ -74,6 +75,21 @@
       "dependencies": [
         "fabric-api(required)"
       ]
+    },
+    {
+      "id": "forge-1.20.1",
+      "task": "ci-forge-1.20.1",
+      "files": [
+        "targets/1.20.1/forge/build/libs/verticaltrapdoors-*-forge.jar"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "gameVersions": [
+        "1.20.1"
+      ],
+      "java": 17,
+      "dependencies": []
     }
   ]
 }

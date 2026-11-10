@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.radaeli.verticaltrapdoors.forge.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "verticaltrapdoors.refmap.json",
+  "client": ["BlockUseMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

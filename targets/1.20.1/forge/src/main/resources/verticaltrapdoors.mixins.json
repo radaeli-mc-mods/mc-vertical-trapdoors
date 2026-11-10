@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.radaeli.verticaltrapdoors.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "verticaltrapdoors.refmap.json",
+  "mixins": [
+    "BlockDefaultStateInvoker",
+    "TrapDoorBlockMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}

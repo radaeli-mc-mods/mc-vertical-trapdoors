@@ -81,6 +81,38 @@ def main() -> None:
             config_paths = [entry if isinstance(entry, str) else entry.get("config")
                             for entry in metadata.get("mixins", [])]
             forbidden_loader_paths = ("/neoforge/", "/forge/")
+        elif args.loader == "forge":
+            toml = read_text(jar, "META-INF/mods.toml")
+            expected_mod_metadata = {
+                "mod id": (r'modId="([^\"]+)"', args.mod_id),
+                "mod version": (r'version="([^\"]+)"', f"{args.mod_version}+{args.minecraft_version}"),
+                "Minecraft dependency": (
+                    r'modId="minecraft"\s*\nmandatory=true\s*\nversionRange="\[([^\]]+)\]"',
+                    args.minecraft_version,
+                ),
+            }
+            for label, (pattern, expected) in expected_mod_metadata.items():
+                match = re.search(pattern, toml)
+                if not match or match.group(1) != expected:
+                    fail(f"{label} metadata should be {expected!r}")
+            forge_dependency = re.search(
+                r'modId="forge"\s*\nmandatory=true\s*\nversionRange="\[([^,\]]+),\)"', toml
+            )
+            if not forge_dependency or not forge_dependency.group(1).startswith("47."):
+                fail("Forge dependency metadata should require Forge 47.x or newer")
+            if re.search(r"\$\{[^}]+}", toml):
+                fail("Forge metadata contains an unresolved template placeholder")
+            if re.search(r"\$\{[^}]+}", read_text(jar, "pack.mcmeta")):
+                fail("pack metadata contains an unresolved template placeholder")
+            main_class = "com/radaeli/verticaltrapdoors/forge/VerticalTrapdoorsForge.class"
+            manifest_lines = read_text(jar, "META-INF/MANIFEST.MF").replace("\r\n ", "")
+            manifest = dict(
+                line.split(": ", 1)
+                for line in manifest_lines.splitlines()
+                if ": " in line
+            )
+            config_paths = [path.strip() for path in manifest.get("MixinConfigs", "").split(",") if path.strip()]
+            forbidden_loader_paths = ("/neoforge/", "/fabric/")
         else:
             fail(f"unsupported loader: {args.loader}")
 

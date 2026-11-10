@@ -169,6 +169,48 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Vertical Trapdoors: Build Forge 1.20.1",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\1.20.1\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":forge:build",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\1.20.1"
+      },
+      "group": "build",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Vertical Trapdoors: Run Forge 1.20.1 Client",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\1.20.1\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":forge:runClient",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\1.20.1"
+      },
+      "group": "test",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }
