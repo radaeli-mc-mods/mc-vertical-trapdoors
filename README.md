@@ -27,9 +27,10 @@ When attached to a wall, vanilla trapdoors lie flat. **Vertical Trapdoors** lets
 
 <p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaeli-mc-mods/mc-vertical-trapdoors/main/docs/gallery/section-titles/requirements.png" alt="REQUIREMENTS" width="355"></p>
 
-- **Minecraft:** 1.21.1
-- **Loader:** NeoForge
-- Install the mod on both the client and server.
+- **Minecraft 1.21.1:** NeoForge or Fabric. The Fabric version requires **Fabric API 0.116.17+1.21.1**.
+- **Minecraft 26.1.2:** NeoForge.
+
+Install the mod on both the client and server.
 
 <p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaeli-mc-mods/mc-vertical-trapdoors/main/docs/gallery/section-titles/can_i_use.png" alt="CAN I USE THIS IN A MODPACK?" width="679"></p>
 
