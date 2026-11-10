@@ -42,6 +42,48 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Vertical Trapdoors: Build Fabric",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\1.21.1\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":fabric:build",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\1.21.1"
+      },
+      "group": "build",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Vertical Trapdoors: Run Fabric Client",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\1.21.1\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":fabric:runClient",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\1.21.1"
+      },
+      "group": "test",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

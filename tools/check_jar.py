@@ -41,30 +41,57 @@ def main() -> None:
 
     with zipfile.ZipFile(args.jar) as jar:
         names = set(jar.namelist())
-        toml = read_text(jar, "META-INF/neoforge.mods.toml")
-        expected_mod_metadata = {
-            "mod id": (r'modId="([^"]+)"', args.mod_id),
-            "mod version": (r'version="([^"]+)"', f"{args.mod_version}+{args.minecraft_version}"),
-            "Minecraft dependency": (r'modId="minecraft"\s*\ntype="required"\s*\nversionRange="\[([^\]]+)\]"', args.minecraft_version),
-        }
-        for label, (pattern, expected) in expected_mod_metadata.items():
-            match = re.search(pattern, toml)
-            if not match or match.group(1) != expected:
-                fail(f"{label} metadata should be {expected!r}")
-        if re.search(r"\$\{[^}]+}", toml):
-            fail("NeoForge metadata contains an unresolved template placeholder")
-        if re.search(r"\$\{[^}]+}", read_text(jar, "pack.mcmeta")):
-            fail("pack metadata contains an unresolved template placeholder")
+        if args.loader == "neoforge":
+            toml = read_text(jar, "META-INF/neoforge.mods.toml")
+            expected_mod_metadata = {
+                "mod id": (r'modId="([^"]+)"', args.mod_id),
+                "mod version": (r'version="([^"]+)"', f"{args.mod_version}+{args.minecraft_version}"),
+                "Minecraft dependency": (r'modId="minecraft"\s*\ntype="required"\s*\nversionRange="\[([^\]]+)\]"', args.minecraft_version),
+            }
+            for label, (pattern, expected) in expected_mod_metadata.items():
+                match = re.search(pattern, toml)
+                if not match or match.group(1) != expected:
+                    fail(f"{label} metadata should be {expected!r}")
+            if re.search(r"\$\{[^}]+}", toml):
+                fail("NeoForge metadata contains an unresolved template placeholder")
+            if re.search(r"\$\{[^}]+}", read_text(jar, "pack.mcmeta")):
+                fail("pack metadata contains an unresolved template placeholder")
+            main_class = "com/radaeli/verticaltrapdoors/neoforge/VerticalTrapdoors.class"
+            config_paths = re.findall(r'config="([^"]+\.mixins\.json)"', toml)
+            forbidden_loader_paths = ("/fabric/", "/forge/")
+        elif args.loader == "fabric":
+            metadata_text = read_text(jar, "fabric.mod.json")
+            metadata = json.loads(metadata_text)
+            if metadata.get("id") != args.mod_id:
+                fail(f"Fabric mod id should be {args.mod_id!r}")
+            if metadata.get("version") != args.mod_version:
+                fail(f"Fabric mod version should be {args.mod_version!r}")
+            if metadata.get("depends", {}).get("minecraft") != f"={args.minecraft_version}":
+                fail(f"Fabric Minecraft dependency should be ={args.minecraft_version!r}")
+            if not metadata.get("depends", {}).get("fabricloader"):
+                fail("Fabric metadata declares no Fabric Loader dependency")
+            if not metadata.get("depends", {}).get("fabric-api"):
+                fail("Fabric metadata declares no Fabric API dependency")
+            if re.search(r"\$\{[^}]+}", metadata_text):
+                fail("Fabric metadata contains an unresolved template placeholder")
+            main_class = "com/radaeli/verticaltrapdoors/fabric/VerticalTrapdoorsFabric.class"
+            client_class = "com/radaeli/verticaltrapdoors/fabric/client/VerticalTrapdoorsFabricClient.class"
+            if client_class not in names:
+                fail(f"missing Fabric client entrypoint class {client_class}")
+            config_paths = [entry if isinstance(entry, str) else entry.get("config")
+                            for entry in metadata.get("mixins", [])]
+            forbidden_loader_paths = ("/neoforge/", "/forge/")
+        else:
+            fail(f"unsupported loader: {args.loader}")
 
-        main_class = f"com/radaeli/verticaltrapdoors/neoforge/VerticalTrapdoors.class"
         if main_class not in names:
-            fail(f"missing NeoForge entrypoint class {main_class}")
-
-        config_paths = re.findall(r'config="([^"]+\.mixins\.json)"', toml)
+            fail(f"missing {args.loader} entrypoint class {main_class}")
         if not config_paths:
-            fail("NeoForge metadata declares no Mixin configuration")
+            fail(f"{args.loader} metadata declares no Mixin configuration")
         for config_path in config_paths:
             config = json.loads(read_text(jar, config_path))
+            if config.get("refmap") and config["refmap"] not in names:
+                fail(f"Mixin refmap declared by {config_path} is missing: {config['refmap']}")
             package = config.get("package", "")
             for category in ("mixins", "client", "server"):
                 for mixin in config.get(category, []):
@@ -72,7 +99,7 @@ def main() -> None:
                     if class_path not in names:
                         fail(f"declared {category} Mixin class missing: {class_path}")
 
-        if any("/fabric/" in f"/{name.lower()}" or "/forge/" in f"/{name.lower()}" for name in names):
+        if any(path in f"/{name.lower()}" for path in forbidden_loader_paths for name in names):
             fail("artifact contains classes or metadata for another loader")
         forbidden_prefixes = (
             "net/minecraft/", "net/neoforged/", "net/fabricmc/", "net/minecraftforge/",
@@ -96,7 +123,7 @@ def main() -> None:
             if major != expected_major:
                 fail(f"{name} targets class-file major {major}; expected Java {args.java} ({expected_major})")
 
-    print(f"Validated {args.jar}: NeoForge {args.minecraft_version}, Java {args.java}, "
+    print(f"Validated {args.jar}: {args.loader} {args.minecraft_version}, Java {args.java}, "
           f"mod {args.mod_version}, {len(class_entries)} classes (major {expected_major}).")
 
 

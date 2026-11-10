@@ -2,6 +2,7 @@
 .gradle-vertical-trapdoors/
 build/
 runs/
+/targets/*/*/run/
 .idea/
 *.iml
 out/

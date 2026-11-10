@@ -13,7 +13,8 @@ ext.modLicense = identity.getProperty('mod_license')
 ext.modAuthors = identity.getProperty('mod_authors')
 ext.modDescription = identity.getProperty('mod_description')
 ext.minecraftVersion = targetProps.getProperty('minecraft_version')
-ext.javaVersion = targetProps.getProperty('java_version') as int
+def targetJavaVersion = targetProps.getProperty('java_version') as int
+ext.javaVersion = targetJavaVersion
 ext.neoforgeVersion = targetProps.getProperty('neoforge_version')
 ext.mod_id = modId
 ext.mod_name = modName
@@ -29,7 +30,7 @@ version = "${modVersion}+${minecraftVersion}-${loaderId}"
 base { archivesName = modId }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     withSourcesJar()
 }
 
@@ -41,14 +42,14 @@ sourceSets {
     client {
         java.srcDir(rootProject.file('neoforge/src/client/java'))
         java.srcDir(rootProject.file('../../shared/src/client/java'))
-        compileClasspath += sourceSets.main.output + configurations.mainCompileClasspath
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += output + compileClasspath
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = javaVersion
+    options.release = targetJavaVersion
 }
 
 tasks.named('processResources').configure {

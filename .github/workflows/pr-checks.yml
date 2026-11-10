@@ -65,8 +65,13 @@ jobs:
           (cd "$(dirname "${jars[0]}")" && sha256sum "$jar_name" > "$jar_name.sha256")
           mkdir -p artifact-out
           cp "${jars[0]}" "${jars[0]}.sha256" artifact-out/
-          cp -R '${{ matrix.directory }}/neoforge/build/reports/tests/test' artifact-out/test-report
-          cp -R '${{ matrix.directory }}/neoforge/build/test-results/test' artifact-out/test-results
+          mkdir -p artifact-out/test-reports
+          if [[ -d '${{ matrix.directory }}/${{ matrix.loader }}/build/reports/tests/test' ]]; then
+            cp -R '${{ matrix.directory }}/${{ matrix.loader }}/build/reports/tests/test' artifact-out/test-report
+          fi
+          if [[ -d '${{ matrix.directory }}/${{ matrix.loader }}/build/test-results/test' ]]; then
+            cp -R '${{ matrix.directory }}/${{ matrix.loader }}/build/test-results/test' artifact-out/test-results
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: verticaltrapdoors-${{ matrix.minecraft }}-${{ matrix.loader }}
