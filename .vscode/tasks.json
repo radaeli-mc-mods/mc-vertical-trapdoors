@@ -339,6 +339,49 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Vertical Trapdoors: Build NeoForge 26.3",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\26.3\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":neoforge:clean",
+        ":neoforge:build",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\26.3"
+      },
+      "group": "build",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Vertical Trapdoors: Run NeoForge 26.3 Client",
+      "type": "process",
+      "command": "${workspaceFolder}\\targets\\26.3\\gradlew.bat",
+      "args": [
+        "--no-daemon",
+        "--no-parallel",
+        ":neoforge:runClient",
+        "--console=plain"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\targets\\26.3"
+      },
+      "group": "test",
+      "problemMatcher": "$gradle",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

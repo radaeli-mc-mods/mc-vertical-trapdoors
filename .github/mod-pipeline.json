@@ -139,6 +139,21 @@
       "dependencies": [
         "fabric-api(required)"
       ]
+    },
+    {
+      "id": "neoforge-26.3",
+      "task": "ci-neoforge-26.3",
+      "files": [
+        "targets/26.3/neoforge/build/libs/verticaltrapdoors-*-neoforge.jar"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "gameVersions": [
+        "26.3"
+      ],
+      "java": 25,
+      "dependencies": []
     }
   ]
 }

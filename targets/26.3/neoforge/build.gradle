@@ -1,0 +1,42 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+apply from: rootProject.file('../../gradle/target-conventions.gradle')
+
+// 26.3 has SDL input codes. The vanilla model pipeline remains compatible with the modern implementation.
+def modern = rootProject.file('../26.1.2')
+sourceSets {
+    main {
+        java.exclude 'com/radaeli/verticaltrapdoors/AltModifierState.java'
+        java.srcDirs new File(modern, 'compat/com/radaeli/verticaltrapdoors'),
+                new File(modern, 'src/main/java'), new File(modern, 'neoforge/src/main/java')
+    }
+    client {
+        java.srcDir rootProject.file('src/client/java')
+    }
+    test {
+        java.srcDir rootProject.file('neoforge/src/test/java')
+    }
+}
+
+neoForge {
+    version = neoforgeVersion
+
+    runs {
+        client { client(); gameDirectory = project.file('../../../runs/client-26.3') }
+        server { server(); gameDirectory = project.file('../../../runs/server-26.3'); programArgument '--nogui' }
+    }
+
+    mods { "${mod_id}" { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+    unitTest { enable(); testedMod = mods[mod_id] }
+}
+
+dependencies {
+    testImplementation sourceSets.client.output
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure { useJUnitPlatform() }
+tasks.named('jar', Jar).configure { from sourceSets.client.output }
