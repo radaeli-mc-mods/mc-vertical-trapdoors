@@ -1,0 +1,87 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.15.5'
+}
+
+def identity = new Properties()
+rootProject.file('../../gradle.properties').withInputStream { identity.load(it) }
+def targetProps = new Properties()
+rootProject.file('gradle.properties').withInputStream { targetProps.load(it) }
+
+def minecraftVersion = targetProps.getProperty('minecraft_version')
+def modVersion = identity.getProperty('mod_version')
+def modId = identity.getProperty('mod_id')
+def javaVersion = targetProps.getProperty('java_version') as int
+
+group = identity.getProperty('mod_group_id')
+version = "${modVersion}+${minecraftVersion}-fabric"
+base { archivesName = modId }
+
+loom {
+    splitEnvironmentSourceSets()
+    mods {
+        verticaltrapdoors {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+    runs {
+        client {
+            client()
+            runDir '../../../runs/fabric-26.1.2'
+        }
+    }
+}
+
+sourceSets.main.java.exclude 'com/radaeli/verticaltrapdoors/AltModifierState.java'
+sourceSets.main.java.srcDir(rootProject.file('compat/com/radaeli/verticaltrapdoors'))
+sourceSets.client.java.setSrcDirs([
+    rootProject.file('fabric/src/client/java'),
+    rootProject.file('../../shared/src/client/java')
+])
+
+sourceSets {
+    main {
+        java.srcDir(rootProject.file('src/main/java'))
+        java.srcDir(rootProject.file('../../shared/src/main/java'))
+    }
+    client {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    withSourcesJar()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersion}"
+    implementation "net.fabricmc:fabric-loader:${targetProps.getProperty('fabric_loader_version')}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${targetProps.getProperty('fabric_api_version')}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = javaVersion
+}
+
+processResources {
+    def expanded = [
+        version: modVersion,
+        minecraft_version: minecraftVersion,
+        fabric_loader_version: targetProps.getProperty('fabric_loader_version'),
+        fabric_api_version: targetProps.getProperty('fabric_api_version'),
+        mod_id: modId,
+        mod_name: identity.getProperty('mod_name'),
+        mod_description: identity.getProperty('mod_description'),
+        mod_authors: identity.getProperty('mod_authors'),
+        mod_license: identity.getProperty('mod_license')
+    ]
+    inputs.properties(expanded)
+    filesMatching('fabric.mod.json') { expand(expanded) }
+}
+
+tasks.named('jar', Jar).configure {
+    from sourceSets.client.output
+}
