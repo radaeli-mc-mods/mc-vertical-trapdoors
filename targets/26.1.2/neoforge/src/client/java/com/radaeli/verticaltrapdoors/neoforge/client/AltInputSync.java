@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
@@ -31,23 +32,32 @@ public final class AltInputSync {
         syncState();
     }
 
+    @SubscribeEvent
+    public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        reset();
+    }
+
     public static void syncState() {
         Minecraft minecraft = Minecraft.getInstance();
         boolean connected = minecraft.player != null && minecraft.getConnection() != null;
 
         if (!connected) {
-            AltModifierState.clearLocalState();
-            lastSentDown = false;
+            reset();
             return;
         }
 
         boolean focused = minecraft.getWindow().isFocused();
-        boolean down = focused && minecraft.screen == null && minecraft.hasAltDown();
+        boolean down = focused && !GameplayScreen.isOpen(minecraft) && minecraft.hasAltDown();
         AltModifierState.setLocalDown(minecraft.player, down);
 
         if (down != lastSentDown) {
             net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new AltModifierPayload(down));
             lastSentDown = down;
         }
+    }
+
+    private static void reset() {
+        AltModifierState.clearLocalState();
+        lastSentDown = false;
     }
 }

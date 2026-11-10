@@ -10,16 +10,19 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.DynamicBlockStateModel;
 import org.joml.Matrix4f;
+import org.jspecify.annotations.Nullable;
 
 /** Delegates state-dependent model selection to the matching vanilla trapdoor state. */
 final class RotatedTrapDoorBlockStateModel implements DynamicBlockStateModel {
     private final BlockStateModel original;
     private final BlockState sourceState;
+    private final BlockState placedState;
     private final Matrix4f transform;
 
     RotatedTrapDoorBlockStateModel(BlockStateModel original, BlockState sourceState, BlockState placedState) {
         this.original = original;
         this.sourceState = sourceState;
+        this.placedState = placedState;
         this.transform = PanelTransform.matrix(sourceState, placedState);
     }
 
@@ -46,9 +49,12 @@ final class RotatedTrapDoorBlockStateModel implements DynamicBlockStateModel {
         return original.materialFlags(level, pos, sourceState);
     }
 
-    @Override public Object createGeometryKey(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random) {
-        return new GeometryKey(sourceState, original.createGeometryKey(level, pos, sourceState, random));
+    @Override public @Nullable Object createGeometryKey(
+            BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random) {
+        Object originalKey = original.createGeometryKey(level, pos, sourceState, random);
+        // Open and closed vertical panels can share the same source model and have different geometry.
+        return originalKey == null ? null : new GeometryKey(placedState, originalKey);
     }
 
-    private record GeometryKey(BlockState sourceState, Object originalKey) {}
+    private record GeometryKey(BlockState placedState, Object originalKey) {}
 }

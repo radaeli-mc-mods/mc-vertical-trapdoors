@@ -7,6 +7,7 @@ apply from: rootProject.file('../../gradle/target-conventions.gradle')
 // The 26.1 line changed Level#isClientSide from a field to an accessor.
 sourceSets.main.java.exclude 'com/radaeli/verticaltrapdoors/AltModifierState.java'
 sourceSets.main.java.srcDir(rootProject.file('compat/com/radaeli/verticaltrapdoors'))
+sourceSets.client.java.srcDir('src/compat/java')
 
 neoForge {
     version = neoforgeVersion

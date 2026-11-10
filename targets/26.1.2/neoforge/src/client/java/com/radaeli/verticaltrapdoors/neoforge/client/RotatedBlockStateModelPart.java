@@ -1,6 +1,5 @@
 package com.radaeli.verticaltrapdoors.neoforge.client;
 
-import com.radaeli.verticaltrapdoors.client.PanelTransform;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
@@ -9,7 +8,6 @@ import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.util.TriState;
 import net.neoforged.neoforge.client.model.quad.BakedNormals;
-import net.neoforged.neoforge.client.model.quad.BakedColors;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -43,11 +41,8 @@ final class RotatedBlockStateModelPart implements BlockStateModelPart {
         Vector3f p1 = transformedPosition(quad.position1());
         Vector3f p2 = transformedPosition(quad.position2());
         Vector3f p3 = transformedPosition(quad.position3());
-        var info = quad.materialInfo();
-        BakedQuad.MaterialInfo material = new BakedQuad.MaterialInfo(info.sprite(), info.layer(), info.itemRenderType(),
-                info.tintIndex(), info.shade(), info.lightEmission(), info.ambientOcclusion());
         return new BakedQuad(p0, p1, p2, p3, quad.packedUV0(), quad.packedUV1(), quad.packedUV2(), quad.packedUV3(),
-                rotate(quad.direction()), material, transformNormals(quad.bakedNormals()), quad.bakedColors());
+                rotate(quad.direction()), quad.materialInfo(), transformNormals(quad.bakedNormals()), quad.bakedColors());
     }
 
     private Vector3f transformedPosition(org.joml.Vector3fc originalPosition) {
