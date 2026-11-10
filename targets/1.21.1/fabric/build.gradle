@@ -8,7 +8,7 @@ def targetProps = new Properties()
 rootProject.file('gradle.properties').withInputStream { targetProps.load(it) }
 
 def minecraftVersion = targetProps.getProperty('minecraft_version')
-def modVersion = identity.getProperty('mod_version')
+def modVersion = findProperty('mod_version') ?: identity.getProperty('mod_version')
 def modId = identity.getProperty('mod_id')
 def javaVersion = targetProps.getProperty('java_version') as int
 

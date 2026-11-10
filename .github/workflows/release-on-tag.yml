@@ -111,6 +111,7 @@ jobs:
           merge-multiple: true
       - name: Upload release artifacts
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
