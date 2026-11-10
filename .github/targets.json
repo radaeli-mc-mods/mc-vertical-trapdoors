@@ -15,6 +15,14 @@
       "directory": "targets/1.21.1",
       "project": ":fabric",
       "artifact": "targets/1.21.1/fabric/build/libs/verticaltrapdoors-*.jar"
+    },
+    {
+      "minecraft": "26.1.2",
+      "loader": "neoforge",
+      "java": "25",
+      "directory": "targets/26.1.2",
+      "project": ":neoforge",
+      "artifact": "targets/26.1.2/neoforge/build/libs/verticaltrapdoors-*.jar"
     }
   ]
 }

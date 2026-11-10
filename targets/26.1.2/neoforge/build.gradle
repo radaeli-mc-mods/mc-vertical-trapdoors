@@ -1,0 +1,30 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+apply from: rootProject.file('../../gradle/target-conventions.gradle')
+
+// The 26.1 line changed Level#isClientSide from a field to an accessor.
+sourceSets.main.java.exclude 'com/radaeli/verticaltrapdoors/AltModifierState.java'
+sourceSets.main.java.srcDir(rootProject.file('compat/com/radaeli/verticaltrapdoors'))
+
+neoForge {
+    version = neoforgeVersion
+
+    runs {
+        client { client(); gameDirectory = project.file('../../../runs/client-26.1.2') }
+        server { server(); gameDirectory = project.file('../../../runs/server-26.1.2'); programArgument '--nogui' }
+    }
+
+    mods { "${mod_id}" { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+    unitTest { enable(); testedMod = mods[mod_id] }
+}
+
+dependencies {
+    testImplementation sourceSets.client.output
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test).configure { useJUnitPlatform() }
+tasks.named('jar', Jar).configure { from sourceSets.client.output }
