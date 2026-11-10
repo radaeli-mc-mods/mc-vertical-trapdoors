@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/radaeli-mc-mods/mc-ci/main/schemas/mod-pipeline.schema.json",
+  "displayName": "Vertical Trapdoors",
+  "java": [
+    21,
+    25
+  ],
+  "checks": [],
+  "curseforge": {
+    "projectId": "1787624",
+    "releaseType": "auto"
+  },
+  "targets": [
+    {
+      "id": "neoforge-1.21.1",
+      "task": "ci-neoforge-1.21.1",
+      "files": [
+        "targets/1.21.1/neoforge/build/libs/verticaltrapdoors-*-neoforge.jar"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "gameVersions": [
+        "1.21.1"
+      ],
+      "java": 21,
+      "dependencies": []
+    },
+    {
+      "id": "fabric-1.21.1",
+      "task": "ci-fabric-1.21.1",
+      "files": [
+        "targets/1.21.1/fabric/build/libs/verticaltrapdoors-*-fabric.jar"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "gameVersions": [
+        "1.21.1"
+      ],
+      "java": 21,
+      "dependencies": [
+        "fabric-api(required)"
+      ]
+    },
+    {
+      "id": "neoforge-26.1.2",
+      "task": "ci-neoforge-26.1.2",
+      "files": [
+        "targets/26.1.2/neoforge/build/libs/verticaltrapdoors-*-neoforge.jar"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "gameVersions": [
+        "26.1.2"
+      ],
+      "java": 25,
+      "dependencies": []
+    }
+  ]
+}

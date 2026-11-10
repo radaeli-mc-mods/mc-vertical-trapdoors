@@ -1,0 +1,47 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'java-base'
+}
+
+def pipeline = new JsonSlurper().parse(file('.github/mod-pipeline.json'))
+def windows = System.getProperty('os.name').startsWith('Windows')
+def wrapperCommand = windows ? ['cmd.exe', '/d', '/c', 'gradlew.bat'] : ['sh', './gradlew']
+def python = providers.gradleProperty('ciPython').orElse(windows ? 'python' : 'python3')
+def modId = providers.gradleProperty('mod_id')
+def modVersion = providers.gradleProperty('mod_version')
+
+pipeline.targets.each { target ->
+    def minecraft = target.gameVersions[0]
+    def loader = target.loaders[0]
+    def targetJava = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(target.java)
+    }
+
+    // Launch the target's wrapper with its own JDK and Gradle distribution.
+    def targetBuild = tasks.register("build-${target.id}", Exec) {
+        workingDir "targets/${minecraft}"
+        commandLine(wrapperCommand + [
+            ":${loader}:clean", ":${loader}:build",
+            '--no-daemon', '--no-parallel', '--console=plain', '--stacktrace'
+        ])
+        doFirst {
+            environment 'JAVA_HOME', targetJava.get().metadata.installationPath.asFile.absolutePath
+        }
+    }
+
+    tasks.register(target.task, Exec) {
+        group = 'verification'
+        description = "Build and verify the ${target.id} production JAR"
+        dependsOn targetBuild
+        doFirst {
+            def jars = fileTree(rootDir) { include target.files }.files
+            if (jars.size() != 1) {
+                throw new GradleException("Expected one production JAR for ${target.id}, found ${jars}")
+            }
+            commandLine python.get(), 'tools/check_jar.py', '--jar', jars.first(),
+                '--minecraft-version', minecraft, '--loader', loader, '--java', target.java,
+                '--mod-id', modId.get(), '--mod-version', modVersion.get()
+        }
+    }
+}

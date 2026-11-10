@@ -9,18 +9,12 @@ on:
         description: Existing tag to build and publish
         required: true
         type: string
-  workflow_call:
-    inputs:
-      tag:
-        description: Newly created semantic tag
-        required: true
-        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -32,10 +26,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+          ref: ${{ inputs.tag || github.ref_name }}
       - id: read
         shell: bash
-        run: echo "matrix=$(jq -c '.targets' .github/targets.json)" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ -f .github/mod-pipeline.json ]]; then
+            matrix=$(jq -c '[.targets[] | {
+              minecraft: .gameVersions[0],
+              loader: .loaders[0],
+              java: .java,
+              directory: ("targets/" + .gameVersions[0]),
+              project: (":" + .loaders[0]),
+              artifact: .files[0]
+            }]' .github/mod-pipeline.json)
+          else
+            matrix=$(jq -c '.targets' .github/targets.json)
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
     name: ${{ matrix.minecraft }} / ${{ matrix.loader }}
@@ -46,7 +53,7 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.targets.outputs.matrix) }}
     env:
-      RELEASE_TAG: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     defaults:
       run:
         working-directory: ${{ matrix.directory }}
@@ -63,7 +70,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]
           chmod +x ./gradlew
           ./gradlew -Pmod_version="${RELEASE_TAG#v}" ${{ matrix.project }}:clean ${{ matrix.project }}:build --no-daemon --no-parallel --console=plain
       - name: Inspect production JAR
@@ -102,7 +109,7 @@ jobs:
     needs: [targets, build]
     runs-on: ubuntu-latest
     env:
-      RELEASE_TAG: ${{ inputs.tag || github.event.inputs.tag || github.ref_name }}
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -119,5 +126,7 @@ jobs:
           shopt -s nullglob
           jars=(release-artifacts/*.jar release-artifacts/*.sha256)
           test "${#jars[@]}" -gt 0
-          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "Vertical Trapdoors $RELEASE_TAG"
+          flags=(--generate-notes --title "Vertical Trapdoors $RELEASE_TAG")
+          if [[ "${RELEASE_TAG%%+*}" == *-* ]]; then flags+=(--prerelease); fi
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" "${flags[@]}"
           gh release upload "$RELEASE_TAG" "${jars[@]}" --clobber
