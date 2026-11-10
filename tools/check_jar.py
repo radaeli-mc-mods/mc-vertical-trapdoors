@@ -105,13 +105,19 @@ def main() -> None:
             if re.search(r"\$\{[^}]+}", read_text(jar, "pack.mcmeta")):
                 fail("pack metadata contains an unresolved template placeholder")
             main_class = "com/radaeli/verticaltrapdoors/forge/VerticalTrapdoorsForge.class"
-            manifest_lines = read_text(jar, "META-INF/MANIFEST.MF").replace("\r\n ", "")
+            manifest_lines = re.sub(r"\r?\n ", "", read_text(jar, "META-INF/MANIFEST.MF"))
             manifest = dict(
                 line.split(": ", 1)
                 for line in manifest_lines.splitlines()
                 if ": " in line
             )
             config_paths = [path.strip() for path in manifest.get("MixinConfigs", "").split(",") if path.strip()]
+            expected_configs = {
+                f"{args.mod_id}.forge.mixins.json",
+                f"{args.mod_id}.forge.client.mixins.json",
+            }
+            if len(config_paths) != len(expected_configs) or set(config_paths) != expected_configs:
+                fail("Forge manifest must list the common and client Mixin configurations")
             forbidden_loader_paths = ("/neoforge/", "/fabric/")
         else:
             fail(f"unsupported loader: {args.loader}")
@@ -122,14 +128,21 @@ def main() -> None:
             fail(f"{args.loader} metadata declares no Mixin configuration")
         for config_path in config_paths:
             config = json.loads(read_text(jar, config_path))
-            if config.get("refmap") and config["refmap"] not in names:
-                fail(f"Mixin refmap declared by {config_path} is missing: {config['refmap']}")
+            refmap = config.get("refmap")
+            if refmap and refmap not in names:
+                fail(f"Mixin refmap declared by {config_path} is missing: {refmap}")
+            if args.loader == "forge":
+                if not refmap:
+                    fail(f"Forge Mixin configuration declares no refmap: {config_path}")
+                mappings = json.loads(read_text(jar, refmap)).get("mappings", {})
             package = config.get("package", "")
             for category in ("mixins", "client", "server"):
                 for mixin in config.get(category, []):
                     class_path = "/".join(filter(None, (package.replace(".", "/"), mixin.replace(".", "/")))) + ".class"
                     if class_path not in names:
                         fail(f"declared {category} Mixin class missing: {class_path}")
+                    if args.loader == "forge" and not mappings.get(class_path.removesuffix(".class")):
+                        fail(f"Forge Mixin has no refmap mappings: {class_path}")
 
         if any(path in f"/{name.lower()}" for path in forbidden_loader_paths for name in names):
             fail("artifact contains classes or metadata for another loader")

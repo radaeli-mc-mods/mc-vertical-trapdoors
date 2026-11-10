@@ -52,6 +52,8 @@ minecraft {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+def mixinConfigs = ['verticaltrapdoors.forge.mixins.json', 'verticaltrapdoors.forge.client.mixins.json']
+
 repositories { }
 
 dependencies {
@@ -61,8 +63,7 @@ dependencies {
 
 mixin {
     add sourceSets.main, 'verticaltrapdoors.refmap.json'
-    config 'verticaltrapdoors.mixins.json'
-    config 'verticaltrapdoors.client.mixins.json'
+    mixinConfigs.each { config it }
 }
 
 sourceSets.main.java.srcDir(rootProject.file('src/main/java'))
@@ -100,7 +101,7 @@ jar {
             'Implementation-Title': identity.getProperty('mod_name'),
             'Implementation-Version': project.version,
             'Implementation-Vendor': identity.getProperty('mod_authors'),
-            'MixinConfigs': 'verticaltrapdoors.mixins.json,verticaltrapdoors.client.mixins.json'
+            'MixinConfigs': mixinConfigs.join(',')
         ])
     }
     finalizedBy 'reobfJar'

@@ -1,7 +1,9 @@
 package com.radaeli.verticaltrapdoors.forge.network;
 
 import com.radaeli.verticaltrapdoors.forge.VerticalTrapdoorsForge;
+import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
@@ -20,7 +22,8 @@ public final class ForgeAltNetworking {
     public static synchronized void register() {
         if (registered) return;
         CHANNEL.registerMessage(0, AltModifierMessage.class,
-                AltModifierMessage::encode, AltModifierMessage::decode, AltModifierMessage::handle);
+                AltModifierMessage::encode, AltModifierMessage::decode, AltModifierMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
         registered = true;
     }
 }
