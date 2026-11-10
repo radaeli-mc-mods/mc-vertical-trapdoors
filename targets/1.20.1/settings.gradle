@@ -1,9 +1,11 @@
 pluginManagement {
     repositories {
         maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.fabricmc.net/' }
         gradlePluginPortal()
     }
 }
 
 rootProject.name = 'vertical-trapdoors-1.20.1'
 include 'forge'
+include 'fabric'
